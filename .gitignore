@@ -1,0 +1,11 @@
+datasets/*
+test_datasets/*
+experiments/*
+results/*
+COCO_dset/*
+COCO_dset
+runs/*
+test_datasets/*
+comparison_files/*
+vgg19-dcbb9e9d.pth
+CLIP_prefix_caption/transformer_weights.pt
