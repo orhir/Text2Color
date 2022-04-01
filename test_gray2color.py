@@ -170,7 +170,7 @@ def preprocessing(inputs):
 
 if __name__ == "__main__":
     device = "cuda"
-    model_name = 'ImageNet_Subset5000'
+    model_name = 'F'
     # ckpt_path = 'experiments/Color2Embed_noPreTrain_autoCaption/250000.pt'
     # ckpt_path = 'experiments/Color2Embed_noPreTrain_autoCaption/125000.pt'
     ckpt_path = 'experiments/ImageNet/250000.pt'
@@ -184,6 +184,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--coco", action='store_true')
+    parser.add_argument("--ckpt", type=str, default=None)
     parser.add_argument("--imagenet", action='store_true')
     parser.add_argument("--image_path", type=str, default=None)
     parser.add_argument("--description", type=str, default=None)
@@ -194,8 +195,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     mkdirs(out_dir_path)
-
+    if args.ckpt is not None:
+        ckpt_path = args.ckpt
     ckpt = torch.load(ckpt_path, map_location=lambda storage, loc: storage)
+
     if args.real_data:
         dataset = dset.CocoCaptions(root=test_dir_path,
                                     annFile=annoation_path)
@@ -210,15 +213,10 @@ if __name__ == "__main__":
         exit(0)
 
     print("Loading Checkpoint")
-    # if not args.auto_caption:
-    #     clip_model, clip_preprocess = clip.load("ViT-B/32")
-    # else:
     clip_model, clip_preprocess = clip.load("RN50x4", device=device, jit=False)
 
-    # if args.auto_caption:
     input_dim = 640
-    # else:
-    #     input_dim = 512
+
     text2Color = Text2Color(input_dim=input_dim).to(device)
     text2Color.load_state_dict(ckpt["text2Color"])
     text2Color.eval()
@@ -233,12 +231,18 @@ if __name__ == "__main__":
     if args.imagenet:
         dataset = dset.ImageFolder(root=test_dir_path)
         colored_dataset = dset.ImageFolder(root=colored_dir_path)
-    else:
+    elif args.coco:
         dataset = dset.CocoCaptions(root=test_dir_path, annFile=annoation_path)
         colored_dataset = dset.CocoCaptions(root=colored_dir_path, annFile=annoation_path)
+    else:
+        dataset = None
+        colored_dataset = None
 
     # length = (len(dataset) if args.metric else 5000) if (args.coco or args.imagenet) else 1
-    length = len(dataset)
+    if (args.coco or args.imagenet):
+        length = len(dataset)
+    else:
+        length = 1
 
     val_loss = 0
     if args.auto_caption:
@@ -251,7 +255,6 @@ if __name__ == "__main__":
         caption_model.load_state_dict(torch.load("CLIP_prefix_caption/transformer_weights.pt"))
         caption_model = caption_model.eval()
         caption_model = caption_model.to(device)
-    # clip_size = 288 if args.auto_caption else 224
     clip_size = 288
     clip_resize = transforms.Resize((clip_size, clip_size))
     metric_resize = transforms.Resize((224, 224))
