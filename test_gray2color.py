@@ -170,7 +170,7 @@ def preprocessing(inputs):
 
 if __name__ == "__main__":
     device = "cuda"
-    model_name = 'Imagenet_autoCaptioned__val'
+    model_name = 'ImageNet_Subset5000'
     # ckpt_path = 'experiments/Color2Embed_noPreTrain_autoCaption/250000.pt'
     # ckpt_path = 'experiments/Color2Embed_noPreTrain_autoCaption/125000.pt'
     ckpt_path = 'experiments/ImageNet/250000.pt'
@@ -345,6 +345,7 @@ if __name__ == "__main__":
                 plt.title(img_caption)
                 plt.axis('off')
                 plt.show()
+                break
 
     val_loss /= length
     print("ACC:", val_loss)
